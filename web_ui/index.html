@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aqlli Dori Qutisi — Boshqaruv Paneli</title>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --success: #16a34a;
+      --warning: #eab308;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 16px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 16px; }
+    
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #0284c7, #0f172a);
+      color: #ffffff;
+      padding: 24px 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-icon {
+      width: 52px; height: 52px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+    }
+    .header-info h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .header-info p { font-size: 13px; opacity: 0.85; }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+    }
+
+    /* Live status grid */
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .status-item {
+      background: #f1f5f9;
+      padding: 14px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .status-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .status-val { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .badge-ok { background: #dcfce7; color: #15803d; }
+    .badge-warn { background: #fef9c3; color: #a16207; }
+    .badge-danger { background: #fee2e2; color: #b91c1c; }
+
+    /* Battery bar */
+    .battery-container { margin-top: 8px; }
+    .progress-bar-bg {
+      background: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;
+    }
+    .progress-bar-fill {
+      background: var(--success); height: 100%; width: 0%;
+      transition: width 0.4s ease, background 0.4s ease;
+    }
+
+    /* Form controls */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .form-group:last-child { margin-bottom: 0; }
+    label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .help-text { font-size: 11px; color: var(--text-muted); }
+    input[type="text"], input[type="time"], input[type="number"], select {
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+      background: #fff;
+    }
+    input:focus { border-color: var(--primary); }
+
+    /* Time slots */
+    .time-slot-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .time-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-delete {
+      background: #fee2e2; color: #dc2626; border: none;
+      width: 42px; height: 42px; border-radius: 10px;
+      font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #e2e8f0; color: var(--text); }
+    .btn-secondary:hover { background: #cbd5e1; }
+    .btn-success { background: var(--success); color: #fff; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #0f172a;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
+      z-index: 100;
+      text-align: center;
+      max-width: 90%;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">💊</div>
+    <div class="header-info">
+      <h1>Aqlli Dori Qutisi</h1>
+      <p>Tibbiy monitoring & SMS xabarnoma tizimi</p>
+    </div>
+  </div>
+
+  <!-- Live Status Card -->
+  <div class="card">
+    <div class="card-title">
+      <span>📊</span> Real Vaqt Holati
+    </div>
+    <div class="status-grid">
+      <div class="status-item">
+        <span class="status-label">Tarmoq Quvvati (220V)</span>
+        <div class="status-val" id="powerStatus">
+          <span class="badge badge-warn">Yuklanmoqda...</span>
+        </div>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Qopqoq Holati</span>
+        <div class="status-val" id="lidStatus">
+          <span class="badge badge-warn">Yuklanmoqda...</span>
+        </div>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Qurilma Soati</span>
+        <div class="status-val" id="deviceClock">--:--:--</div>
+      </div>
+      <div class="status-item">
+        <span class="status-label">GSM Aloqa (SIM800L)</span>
+        <div class="status-val" id="gsmStatus">
+          <span class="badge badge-warn">Tekshirilmoqda</span>
+        </div>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Quti Ichki Harorati</span>
+        <div class="status-val" id="tempStatus">-- °C</div>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Quti Ichki Namligi</span>
+        <div class="status-val" id="humidStatus">-- %</div>
+      </div>
+    </div>
+
+    <!-- Battery -->
+    <div class="battery-container" style="margin-top: 14px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span class="status-label">Batareya Quvvati</span>
+        <span class="status-label" id="batteryText" style="font-weight: 700; color: var(--text);">--%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="batteryBar"></div>
+      </div>
+      <span class="help-text" id="batteryEstimate" style="display: block; margin-top: 4px;"></span>
+    </div>
+
+    <!-- Sync Clock Button -->
+    <button class="btn btn-secondary" style="margin-top: 16px;" onclick="syncTime()">
+      <span>🕒</span> Telefon Vaqtiga Sinxronlash
+    </button>
+  </div>
+
+  <!-- Settings Form -->
+  <form id="settingsForm" onsubmit="saveSettings(event)" class="card">
+    <div class="card-title">
+      <span>⚙️</span> Sozlamalar va Jadval
+    </div>
+
+    <!-- Phone numbers -->
+    <div class="form-group">
+      <label for="phone1">Asosiy Telefon Raqami (SMS uchun)</label>
+      <input type="text" id="phone1" placeholder="+998901234567" required pattern="^\+998[0-9]{9}$">
+      <span class="help-text">Format: +998901234567 (Dori ichilgani va tok o'chgani haqida xabar boradi)</span>
+    </div>
+
+    <div class="form-group">
+      <label for="phone2">Qo'shimcha Telefon Raqami (Ixtiyoriy)</label>
+      <input type="text" id="phone2" placeholder="+998912345678" pattern="^(\+998[0-9]{9})?$">
+      <span class="help-text">2-vasiy yoki shifokor raqami</span>
+    </div>
+
+    <!-- Medicine Schedule -->
+    <div class="form-group">
+      <label>Dori Ichish Vaqtlari (Kunlik)</label>
+      <span class="help-text" style="margin-bottom: 6px;">Belgilangan vaqtdan ±15 daqiqa ichida quti ochilishi kerak</span>
+      <div class="time-slot-list" id="timeSlots">
+        <!-- Javascript dynamically renders time rows here -->
+      </div>
+      <button type="button" class="btn btn-secondary" onclick="addTimeSlot()">
+        <span>➕</span> Yangi Vaqt Qo'shish
+      </button>
+    </div>
+
+    <!-- Volume -->
+    <div class="form-group">
+      <label for="volume">Ovoz Balandligi (1 - 30)</label>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <input type="range" id="volume" min="5" max="30" value="20" style="flex: 1;" oninput="document.getElementById('volVal').innerText = this.value">
+        <span id="volVal" style="font-weight: 700; width: 30px; text-align: right;">20</span>
+      </div>
+    </div>
+
+    <!-- Submit button -->
+    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+      <span>💾</span> Sozlamalarni Saqlash
+    </button>
+  </form>
+
+  <!-- Testing Tools Card -->
+  <div class="card">
+    <div class="card-title">
+      <span>🧪</span> Sinov va Diagnostika
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <button class="btn btn-secondary" onclick="testAudio()">
+        <span>🔊</span> Ovozni Sinash
+      </button>
+      <button class="btn btn-secondary" onclick="testSms()">
+        <span>📩</span> Test SMS Jo'natish
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Notification Toast -->
+<div id="toast">Xabar saqlandi</div>
+
+<script>
+  let timeList = ["08:00", "13:00", "20:00"];
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.innerText = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3500);
+  }
+
+  function renderTimeSlots() {
+    const container = document.getElementById("timeSlots");
+    container.innerHTML = "";
+    timeList.forEach((time, index) => {
+      const row = document.createElement("div");
+      row.className = "time-row";
+      row.innerHTML = `
+        <input type="time" value="${time}" onchange="timeList[${index}] = this.value" required>
+        <button type="button" class="btn-delete" onclick="removeTimeSlot(${index})">✕</button>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  function addTimeSlot() {
+    if (timeList.length >= 6) {
+      showToast("Maksimal 6 ta vaqt kiritish mumkin");
+      return;
+    }
+    timeList.push("12:00");
+    renderTimeSlots();
+  }
+
+  function removeTimeSlot(index) {
+    if (timeList.length <= 1) {
+      showToast("Kamida bitta vaqt bo'lishi kerak!");
+      return;
+    }
+    timeList.splice(index, 1);
+    renderTimeSlots();
+  }
+
+  // Load status from ESP32
+  async function loadStatus() {
+    try {
+      const res = await fetch("/api/status");
+      if (!res.ok) throw new Error("Tarmoq xatosi");
+      const data = await res.json();
+
+      // Power
+      const pwr = document.getElementById("powerStatus");
+      if (data.power_ac) {
+        pwr.innerHTML = '<span class="badge badge-ok">⚡ 220V Ulangan</span>';
+      } else {
+        pwr.innerHTML = '<span class="badge badge-danger">🔋 Tok O\'chgan</span>';
+      }
+
+      // Lid
+      const lid = document.getElementById("lidStatus");
+      if (data.lid_open) {
+        lid.innerHTML = '<span class="badge badge-warn">📂 Qopqoq Ochiq</span>';
+      } else {
+        lid.innerHTML = '<span class="badge badge-ok">🔒 Qopqoq Yopiq</span>';
+      }
+
+      // Clock
+      document.getElementById("deviceClock").innerText = data.clock || "--:--:--";
+
+      // GSM
+      const gsm = document.getElementById("gsmStatus");
+      if (data.gsm_ok) {
+        gsm.innerHTML = `<span class="badge badge-ok">📶 Aloqa Bor (${data.gsm_signal}%)</span>`;
+      } else {
+        gsm.innerHTML = '<span class="badge badge-danger">❌ SIM Tarmoqda Yo\'q</span>';
+      }
+
+      // Battery
+      const bPct = Math.max(0, Math.min(100, data.bat_pct || 0));
+      document.getElementById("batteryText").innerText = bPct + "% (" + (data.bat_volts || "0.0") + "V)";
+      const bar = document.getElementById("batteryBar");
+      bar.style.width = bPct + "%";
+      if (bPct > 35) {
+        bar.style.background = "var(--success)";
+      } else if (bPct > 15) {
+        bar.style.background = "var(--warning)";
+      } else {
+        bar.style.background = "var(--danger)";
+      }
+
+      const estHours = Math.round((bPct / 100) * 45);
+      document.getElementById("batteryEstimate").innerText = data.power_ac ? "Akkumulyator quvvatlanmoqda" : `Zaxira quvvat taxminan ${estHours} soatga yetadi`;
+
+      // Temperature & Humidity (DHT22)
+      const tempEl = document.getElementById("tempStatus");
+      const humidEl = document.getElementById("humidStatus");
+      if (data.dht_ok) {
+        const tVal = parseFloat(data.temp);
+        const hVal = parseFloat(data.humidity);
+        tempEl.innerHTML = `${tVal}°C <span class="badge ${tVal <= 25 ? 'badge-ok' : 'badge-danger'}">${tVal <= 25 ? 'Me\'yorda' : 'Yuqori!'}</span>`;
+        humidEl.innerHTML = `${hVal}% <span class="badge ${hVal <= 65 ? 'badge-ok' : 'badge-danger'}">${hVal <= 65 ? 'Quruq' : 'Nam!'}</span>`;
+      } else {
+        tempEl.innerHTML = `<span class="badge badge-warn">O'qilmoqda</span>`;
+        humidEl.innerHTML = `<span class="badge badge-warn">O'qilmoqda</span>`;
+      }
+
+    } catch (e) {
+      console.log("Status yuklanmadi:", e);
+    }
+  }
+
+  // Load saved config
+  async function loadConfig() {
+    try {
+      const res = await fetch("/api/config");
+      if (!res.ok) return;
+      const cfg = await res.json();
+      if (cfg.phone1) document.getElementById("phone1").value = cfg.phone1;
+      if (cfg.phone2) document.getElementById("phone2").value = cfg.phone2;
+      if (cfg.volume) {
+        document.getElementById("volume").value = cfg.volume;
+        document.getElementById("volVal").innerText = cfg.volume;
+      }
+      if (cfg.times && cfg.times.length > 0) {
+        timeList = cfg.times;
+        renderTimeSlots();
+      }
+    } catch (e) {
+      console.log("Config yuklanmadi:", e);
+    }
+  }
+
+  // Save Settings
+  async function saveSettings(e) {
+    e.preventDefault();
+    const phone1 = document.getElementById("phone1").value.trim();
+    const phone2 = document.getElementById("phone2").value.trim();
+    const volume = parseInt(document.getElementById("volume").value);
+
+    const payload = {
+      phone1: phone1,
+      phone2: phone2,
+      volume: volume,
+      times: timeList
+    };
+
+    try {
+      const res = await fetch("/api/save_config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        showToast("✅ Sozlamalar muvaffaqiyatli saqlandi!");
+      } else {
+        showToast("❌ Saqlashda xatolik yuz berdi");
+      }
+    } catch (err) {
+      showToast("❌ Qurilma bilan aloqa yo'q");
+    }
+  }
+
+  // Sync Phone Time with Device
+  async function syncTime() {
+    const now = new Date();
+    const payload = {
+      year: now.getFullYear(),
+      month: now.getMonth() + 1,
+      day: now.getDate(),
+      hour: now.getHours(),
+      minute: now.getMinutes(),
+      second: now.getSeconds()
+    };
+    try {
+      const res = await fetch("/api/sync_time", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        showToast("🕒 Soat telefoningiz bilan sinxronlandi!");
+        loadStatus();
+      } else {
+        showToast("❌ Sinxronlashda xatolik");
+      }
+    } catch (err) {
+      showToast("❌ Ulanish xatosi");
+    }
+  }
+
+  async function testAudio() {
+    showToast("🔊 Ovoz eslatmasi ijro etilmoqda...");
+    try { await fetch("/api/test_audio"); } catch(e) {}
+  }
+
+  async function testSms() {
+    showToast("📩 Test SMS yuborilmoqda...");
+    try {
+      const res = await fetch("/api/test_sms");
+      const r = await res.json();
+      if (r.status === "ok") {
+        showToast("✅ Test SMS yuborildi!");
+      } else {
+        showToast("❌ SIM800L xatosi: " + (r.msg || "Jo'natilmadi"));
+      }
+    } catch(e) {
+      showToast("❌ So'rov yuborilmadi");
+    }
+  }
+
+  // Init
+  renderTimeSlots();
+  loadConfig();
+  loadStatus();
+  setInterval(loadStatus, 4000);
+</script>
+
+</body>
+</html>
